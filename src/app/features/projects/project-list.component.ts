@@ -28,10 +28,14 @@ export class ProjectListComponent {
     this.router.navigate(['/projects', p.id]);
   }
 
-  remove(p: Project){
+  async remove(p: Project){
     if(confirm('Supprimer ce projet ?')) {
-      this.projects.remove(p.id);
-      this.toast.show('Projet supprimé', 'success');
+      try {
+        await this.projects.remove(p.id);
+        this.toast.show('Projet supprimé', 'success');
+      } catch (error) {
+        this.toast.show('Erreur lors de la suppression', 'error');
+      }
     }
   }
 }

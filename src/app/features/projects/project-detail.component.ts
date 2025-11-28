@@ -53,9 +53,9 @@ export class ProjectDetailComponent implements OnInit {
 
     const hadCahier = !!this.project.cahier;
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       const base64 = (reader.result as string).split(',')[1];
-      this.projects.setCahier(this.project!.id, { fileName: file.name, mimeType: file.type, size: file.size, base64 });
+      await this.projects.setCahier(this.project!.id, { fileName: file.name, mimeType: file.type, size: file.size, base64 });
       this.project = this.projects.byId(this.project!.id);
       this.activityLog.log(this.project!.id, hadCahier ? 'cps_replaced' : 'cps_uploaded', file.name);
       this.toast.show('Cahier des charges ajouté', 'success');
@@ -77,7 +77,7 @@ export class ProjectDetailComponent implements OnInit {
     return this.projects.areAllTasksValidatedForProject(this.project.id);
   }
 
-  toggleChefValidation(){
+  async toggleChefValidation(){
     if(!this.project) return;
 
     if (!this.canValidate() && !this.project.validatedByChef) {
@@ -86,7 +86,7 @@ export class ProjectDetailComponent implements OnInit {
     }
 
     const newStatus = !this.project.validatedByChef;
-    this.projects.update(this.project.id, { validatedByChef: newStatus });
+    await this.projects.update(this.project.id, { validatedByChef: newStatus });
     this.activityLog.log(this.project.id, newStatus ? 'project_validated' : 'project_invalidated');
     this.project = this.projects.byId(this.project.id);
 

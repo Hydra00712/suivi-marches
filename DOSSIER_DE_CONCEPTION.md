@@ -3,10 +3,10 @@
 
 ---
 
-**Réalisé par :** [Votre Nom]  
-**Encadrant :** [Nom du Professeur]  
+**Réalisé par :** Mohamed Adam Benaddi - Yahya Cherakoui - Mehdi Doukkali  
+**Encadrant :** Younes ElBouzekri  
 **Date :** Novembre 2025  
-**Établissement :** [Nom de l'établissement]
+**Établissement :** Université Internationale de Rabat
 
 ---
 

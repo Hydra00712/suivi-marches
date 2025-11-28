@@ -1,0 +1,607 @@
+@startuml use-case-diagram
+' =============================================
+' DIAGRAMME DES CAS D'UTILISATION
+' Système de Suivi des Marchés
+' =============================================
+
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecase {
+    BackgroundColor LightBlue
+    BorderColor DarkBlue
+    ArrowColor DarkBlue
+}
+
+left to right direction
+
+actor "Employé" as EMP #LightGreen
+actor "Chef de Service" as CHEF #Orange
+
+rectangle "Système de Suivi des Marchés" {
+    ' === Authentification ===
+    usecase "S'authentifier" as UC1
+    usecase "S'inscrire" as UC2
+    usecase "Se déconnecter" as UC3
+    
+    ' === Gestion Projets ===
+    usecase "Créer un projet" as UC4
+    usecase "Modifier un projet" as UC5
+    usecase "Supprimer un projet" as UC6
+    usecase "Consulter les projets" as UC7
+    usecase "Uploader cahier des charges" as UC8
+    usecase "Télécharger CPS" as UC9
+    
+    ' === Gestion Tâches ===
+    usecase "Créer une tâche" as UC10
+    usecase "Modifier une tâche" as UC11
+    usecase "Valider une tâche" as UC12
+    usecase "Signaler non pertinent" as UC13
+    usecase "Ajouter un commentaire" as UC14
+    
+    ' === Notifications ===
+    usecase "Consulter notifications" as UC15
+    usecase "Configurer préférences" as UC16
+    
+    ' === Chef uniquement ===
+    usecase "Valider un projet" as UC17 #Pink
+    usecase "Consulter Dashboard" as UC18 #Pink
+    usecase "Voir stats employés" as UC19 #Pink
+    usecase "Voir matrice approbation" as UC20
+    usecase "Voir timeline tâches" as UC21
+}
+
+' === Relations Employé ===
+EMP --> UC1
+EMP --> UC2
+EMP --> UC3
+EMP --> UC4
+EMP --> UC5
+EMP --> UC6
+EMP --> UC7
+EMP --> UC8
+EMP --> UC9
+EMP --> UC10
+EMP --> UC11
+EMP --> UC12
+EMP --> UC13
+EMP --> UC14
+EMP --> UC15
+EMP --> UC16
+EMP --> UC20
+EMP --> UC21
+
+' === Relations Chef (hérite de Employé) ===
+CHEF --|> EMP : <<hérite>>
+CHEF --> UC17
+CHEF --> UC18
+CHEF --> UC19
+
+' === Include/Extend ===
+UC4 ..> UC8 : <<include>>
+UC12 ..> UC14 : <<extend>>
+UC17 ..> UC20 : <<include>>
+
+@enduml
+
+
+@startuml class-diagram
+' =============================================
+' DIAGRAMME DE CLASSES UML
+' Système de Suivi des Marchés
+' =============================================
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor DarkBlue
+}
+
+' === Énumérations ===
+enum Role {
+    EMPLOYE
+    CHEF
+}
+
+enum TaskState {
+    EN_ATTENTE
+    EN_COURS
+    VALIDEE
+    NON_VALIDEE
+}
+
+enum CommentType {
+    URGENT
+    QUOTIDIEN
+    INFORMATIF
+}
+
+enum NotificationType {
+    DEADLINE_WARNING
+    TASK_VALIDATED
+    PROJECT_VALIDATED
+    NEW_COMMENT
+}
+
+' === Classes principales ===
+class Employee {
+    - id: string
+    - name: string
+    - email: string
+    - passwordHash: string
+    - role: Role
+    - serviceId: string
+    - failedLoginAttempts: number
+    - lockedUntil: Date
+    + login(email, password): boolean
+    + logout(): void
+    + canValidateProject(): boolean
+}
+
+class OrgService {
+    - id: string
+    - name: string
+    + getEmployees(): Employee[]
+}
+
+class Project {
+    - id: string
+    - title: string
+    - description: string
+    - ownerId: string
+    - serviceId: string
+    - budget: number
+    - deadline: Date
+    - durationDays: number
+    - validatedByChef: boolean
+    - cahier: CahierDeCharge
+    - createdAt: Date
+    + canBeValidated(): boolean
+    + getCompletionRate(): number
+}
+
+class Task {
+    - id: string
+    - projectId: string
+    - title: string
+    - finalDate: Date
+    - duration: number
+    - state: TaskState
+    - validatedBy: string[]
+    - notPertinentBy: string[]
+    - createdAt: Date
+    + validate(employeeId): void
+    + markNotPertinent(employeeId): void
+    + getApprovalRate(): number
+}
+
+class Comment {
+    - id: string
+    - taskId: string
+    - userId: string
+    - content: string
+    - type: CommentType
+    - createdAt: Date
+}
+
+class CahierDeCharge {
+    - fileName: string
+    - mimeType: string
+    - size: number
+    - base64: string
+    + download(): void
+    + preview(): void
+}
+
+class AppNotification {
+    - id: string
+    - userId: string
+    - type: NotificationType
+    - title: string
+    - message: string
+    - read: boolean
+    - relatedProjectId: string
+    - relatedTaskId: string
+    - createdAt: Date
+    + markAsRead(): void
+}
+
+class ActivityLog {
+    - id: string
+    - userId: string
+    - action: string
+    - entityType: string
+    - entityId: string
+    - details: string
+    - timestamp: Date
+}
+
+' === Relations ===
+OrgService "1" --> "*" Employee : contient
+Employee "1" --> "*" Project : crée
+Project "1" --> "*" Task : contient
+Task "1" --> "*" Comment : a
+Project "1" --> "0..1" CahierDeCharge : possède
+Employee "1" --> "*" AppNotification : reçoit
+Employee "*" --> "*" Task : valide
+Employee "1" --> "*" ActivityLog : génère
+
+Employee --> Role
+Task --> TaskState
+Comment --> CommentType
+AppNotification --> NotificationType
+
+@enduml
+
+
+@startuml er-diagram
+' =============================================
+' SCHÉMA ENTITÉ-RELATION (ERD)
+' Base de Données - Suivi des Marchés
+' =============================================
+
+skinparam linetype ortho
+
+entity "employees" as emp {
+    * id : VARCHAR(36) <<PK>>
+    --
+    * name : VARCHAR(100)
+    * email : VARCHAR(100) <<UK>>
+    * password_hash : VARCHAR(255)
+    * role : ENUM('employe','chef')
+    * service_id : VARCHAR(36) <<FK>>
+    failed_login_attempts : INT
+    locked_until : DATETIME
+    created_at : DATETIME
+}
+
+entity "services" as srv {
+    * id : VARCHAR(36) <<PK>>
+    --
+    * name : VARCHAR(100)
+}
+
+entity "projects" as prj {
+    * id : VARCHAR(36) <<PK>>
+    --
+    * title : VARCHAR(200)
+    description : TEXT
+    * owner_id : VARCHAR(36) <<FK>>
+    * service_id : VARCHAR(36) <<FK>>
+    budget : DECIMAL(12,2)
+    deadline : DATE
+    duration_days : INT
+    validated_by_chef : BOOLEAN
+    created_at : DATETIME
+}
+
+entity "cahiers_de_charge" as cps {
+    * id : VARCHAR(36) <<PK>>
+    --
+    * project_id : VARCHAR(36) <<FK>>
+    * file_name : VARCHAR(255)
+    * mime_type : VARCHAR(100)
+    * size : INT
+    * base64_content : LONGTEXT
+    uploaded_at : DATETIME
+}
+
+entity "tasks" as tsk {
+    * id : VARCHAR(36) <<PK>>
+    --
+    * project_id : VARCHAR(36) <<FK>>
+    * title : VARCHAR(200)
+    final_date : DATE
+    duration : INT
+    * state : ENUM('en_attente','en_cours','validee','non_validee')
+    created_at : DATETIME
+}
+
+entity "task_validations" as tv {
+    * task_id : VARCHAR(36) <<PK,FK>>
+    * employee_id : VARCHAR(36) <<PK,FK>>
+    --
+    * validation_type : ENUM('validated','not_pertinent')
+    validated_at : DATETIME
+}
+
+entity "comments" as cmt {
+    * id : VARCHAR(36) <<PK>>
+    --
+    * task_id : VARCHAR(36) <<FK>>
+    * user_id : VARCHAR(36) <<FK>>
+    * content : TEXT
+    * type : ENUM('urgent','quotidien','informatif')
+    created_at : DATETIME
+}
+
+entity "notifications" as ntf {
+    * id : VARCHAR(36) <<PK>>
+    --
+    * user_id : VARCHAR(36) <<FK>>
+    * type : VARCHAR(50)
+    * title : VARCHAR(200)
+    message : TEXT
+    * read : BOOLEAN
+    related_project_id : VARCHAR(36)
+    related_task_id : VARCHAR(36)
+    created_at : DATETIME
+}
+
+entity "activity_logs" as log {
+    * id : VARCHAR(36) <<PK>>
+    --
+    * user_id : VARCHAR(36) <<FK>>
+    * action : VARCHAR(100)
+    * entity_type : VARCHAR(50)
+    entity_id : VARCHAR(36)
+    details : TEXT
+    * timestamp : DATETIME
+}
+
+' === Relations ===
+srv ||--o{ emp : "emploie"
+emp ||--o{ prj : "crée"
+srv ||--o{ prj : "appartient"
+prj ||--o| cps : "possède"
+prj ||--o{ tsk : "contient"
+tsk ||--o{ tv : "reçoit"
+emp ||--o{ tv : "effectue"
+tsk ||--o{ cmt : "a"
+emp ||--o{ cmt : "écrit"
+emp ||--o{ ntf : "reçoit"
+emp ||--o{ log : "génère"
+
+@enduml
+
+
+@startuml activity-diagram
+' =============================================
+' DIAGRAMME D'ACTIVITÉ
+' Processus de Validation d'un Projet
+' =============================================
+
+skinparam activity {
+    BackgroundColor LightBlue
+    BorderColor DarkBlue
+    DiamondBackgroundColor Yellow
+    DiamondBorderColor DarkOrange
+}
+
+start
+
+:Employé se connecte;
+
+partition "Création du Projet" {
+    :Créer nouveau projet;
+    :Renseigner titre, description, budget;
+    :Définir deadline et durée;
+    :Uploader cahier des charges (CPS);
+}
+
+partition "Création des Tâches" {
+    :Créer les tâches du projet;
+    while (Plus de tâches à créer?) is (Oui)
+        :Ajouter tâche;
+        :Définir date finale et durée;
+        :État = "En attente";
+    endwhile (Non)
+}
+
+partition "Validation par les Employés" {
+    :Employés du service consultent le projet;
+
+    fork
+        :Employé 1 valide tâches;
+    fork again
+        :Employé 2 valide tâches;
+    fork again
+        :Employé N valide tâches;
+    end fork
+
+    while (Toutes tâches validées?) is (Non)
+        if (Tâche pertinente?) then (Oui)
+            :Valider la tâche;
+            :Ajouter commentaire (optionnel);
+        else (Non)
+            :Marquer "Non pertinent";
+            :Expliquer dans commentaire;
+        endif
+    endwhile (Oui)
+}
+
+:Toutes les tâches sont approuvées;
+note right: Condition requise pour\nla validation chef
+
+partition "Validation Chef de Service" {
+    :Chef consulte le projet;
+    :Chef vérifie matrice d'approbation;
+
+    if (Projet satisfaisant?) then (Oui)
+        :Chef valide le projet;
+        :🎉 Confetti de célébration;
+        :Notification envoyée au créateur;
+        :État projet = "Validé";
+    else (Non)
+        :Chef ajoute commentaire;
+        :Retour à l'équipe pour corrections;
+        note right: Processus itératif
+    endif
+}
+
+stop
+
+@enduml
+
+
+@startuml sequence-diagram
+' =============================================
+' DIAGRAMME DE SÉQUENCE
+' Scénario: Validation d'une Tâche
+' =============================================
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 10
+skinparam sequence {
+    ParticipantBackgroundColor LightBlue
+    ParticipantBorderColor DarkBlue
+    ActorBackgroundColor LightGreen
+    ActorBorderColor DarkGreen
+}
+
+actor "Employé" as emp
+participant "Interface\nUtilisateur" as ui
+participant "TaskService" as ts
+participant "ToastService" as toast
+database "localStorage" as db
+
+== Validation d'une Tâche ==
+
+emp -> ui : Clic sur "Valider la tâche"
+activate ui
+
+ui -> ts : validateTask(taskId, employeeId)
+activate ts
+
+ts -> db : getTask(taskId)
+activate db
+db --> ts : task
+deactivate db
+
+ts -> ts : Vérifier si déjà validé
+alt Déjà validé par cet employé
+    ts --> ui : Erreur: "Déjà validé"
+    ui -> toast : show("Vous avez déjà validé", "warning")
+else Non validé
+    ts -> ts : task.validatedBy.push(employeeId)
+    ts -> ts : Calculer nouveau state
+
+    alt Majorité validée
+        ts -> ts : state = "validee"
+    else Sinon
+        ts -> ts : state reste inchangé
+    end
+
+    ts -> db : saveTask(task)
+    activate db
+    db --> ts : OK
+    deactivate db
+
+    ts --> ui : task (mise à jour)
+    deactivate ts
+
+    ui -> toast : show("Tâche validée ✅", "success")
+    activate toast
+    toast --> emp : Afficher notification
+    deactivate toast
+
+    ui --> emp : Afficher nouveau state
+end
+
+deactivate ui
+
+@enduml
+
+
+@startuml sequence-validation-projet
+' =============================================
+' DIAGRAMME DE SÉQUENCE
+' Scénario: Validation Projet par Chef
+' =============================================
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 10
+
+actor "Chef de\nService" as chef
+participant "ProjectDetail\nComponent" as ui
+participant "ProjectService" as ps
+participant "TaskService" as ts
+participant "ConfettiService" as confetti
+participant "NotificationService" as notif
+database "localStorage" as db
+
+== Validation du Projet par le Chef ==
+
+chef -> ui : Clic sur "Valider le projet"
+activate ui
+
+ui -> ts : getTasksByProject(projectId)
+activate ts
+ts -> db : getTasks()
+db --> ts : tasks[]
+ts --> ui : tasks[]
+deactivate ts
+
+ui -> ui : Vérifier toutes tâches validées
+
+alt Toutes tâches NON validées
+    ui -> ui : Afficher erreur
+    ui --> chef : "Toutes les tâches doivent être validées"
+else Toutes tâches validées
+    ui -> ps : validateProject(projectId)
+    activate ps
+
+    ps -> db : getProject(projectId)
+    db --> ps : project
+
+    ps -> ps : project.validatedByChef = true
+
+    ps -> db : saveProject(project)
+    db --> ps : OK
+
+    ps --> ui : project (validé)
+    deactivate ps
+
+    ui -> confetti : fire()
+    activate confetti
+    confetti --> chef : 🎉 Animation confetti
+    deactivate confetti
+
+    ui -> notif : createNotification(ownerId, "Projet validé!")
+    activate notif
+    notif -> db : saveNotification()
+    db --> notif : OK
+    deactivate notif
+
+    ui --> chef : Toast "Projet validé avec succès! 🎉"
+end
+
+deactivate ui
+
+@enduml
+
+
+@startuml gantt-diagram
+' =============================================
+' DIAGRAMME DE GANTT
+' Planification du Projet
+' =============================================
+
+Project starts 2025-10-28
+printscale weekly
+
+-- Phase 1: Analyse --
+[Recueil des besoins] starts 2025-10-28 and lasts 2 days
+[Rédaction cahier des charges] starts 2025-10-30 and lasts 2 days
+[Modélisation UML] starts 2025-11-01 and lasts 1 day
+
+-- Phase 2: Conception --
+[Architecture technique] starts 2025-11-04 and lasts 2 days
+[Design UI/UX] starts 2025-11-06 and lasts 2 days
+[Schéma base de données] starts 2025-11-08 and lasts 1 day
+
+-- Phase 3: Développement --
+[Setup Angular + Structure] starts 2025-11-11 and lasts 1 day
+[Module Authentification] starts 2025-11-12 and lasts 2 days
+[Module Projects] starts 2025-11-14 and lasts 3 days
+[Module Tasks] starts 2025-11-19 and lasts 2 days
+[Module Dashboard] starts 2025-11-21 and lasts 2 days
+[Composants spéciaux] starts 2025-11-25 and lasts 2 days
+[Tests & Debug] starts 2025-11-27 and lasts 2 days
+
+-- Phase 4: Livraison --
+[Documentation] starts 2025-11-29 and lasts 1 day
+[Déploiement] starts 2025-12-02 and lasts 1 day
+
+@enduml
+

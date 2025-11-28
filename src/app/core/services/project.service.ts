@@ -1,46 +1,70 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { Project } from '../models/project.model';
-import { StorageService } from './storage.service';
 import { AuthService } from './auth.service';
 import { TaskService } from './task.service';
+import { ApiService } from './api.service';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectService {
-  private key = 'projects';
-  private _projects$ = new BehaviorSubject<Project[]>(this.storage.getItem<Project[]>(this.key, []));
+  private _projects$ = new BehaviorSubject<Project[]>([]);
   projects$ = this._projects$.asObservable();
 
-  constructor(private storage: StorageService, private auth: AuthService, private tasks: TaskService) {}
+  constructor(private api: ApiService, private auth: AuthService, private tasks: TaskService) {
+    this.loadProjects();
+  }
 
-  private save(){ this.storage.setItem(this.key, this._projects$.value); }
-  all(): Project[]{ return this._projects$.value; }
-  list(): Project[]{ return this._projects$.value; }
+  loadProjects() {
+    this.api.getProjects().subscribe({
+      next: (projects) => this._projects$.next(projects),
+      error: (err) => console.error('Failed to load projects:', err)
+    });
+  }
+
+  all(): Project[] { return this._projects$.value; }
+  list(): Project[] { return this._projects$.value; }
   byId(id: string): Project | undefined { return this._projects$.value.find(p => p.id === id); }
-  byOwner(userId: string): Project[]{ return this._projects$.value.filter(p => p.ownerId === userId); }
-  byService(serviceId: string): Project[]{ return this._projects$.value.filter(p => p.serviceId === serviceId); }
+  byOwner(userId: string): Project[] { return this._projects$.value.filter(p => p.ownerId === userId); }
+  byService(serviceId: string): Project[] { return this._projects$.value.filter(p => p.serviceId === serviceId); }
 
-  create(data: Partial<Project>): Project {
-    const now = new Date().toISOString();
-    const p: Project = {
-      id: 'p-' + Math.random().toString(36).slice(2,9),
+  async create(data: Partial<Project>): Promise<Project> {
+    const projectData = {
       title: data.title || 'Sans titre',
       description: data.description || '',
       serviceId: data.serviceId || this.auth.currentUser()?.serviceId || 'srv-1',
-      ownerId: (data.ownerId as string) || this.auth.currentUser()?.id || 'unknown',
+      ownerId: data.ownerId || this.auth.currentUser()?.id || 'unknown',
       budget: data.budget || 0,
       durationDays: data.durationDays || 0,
-      deadline: data.deadline || now,
-      cahier: data.cahier || null,
-      validatedByChef: false,
-      createdAt: now
+      deadline: data.deadline || new Date().toISOString(),
+      cahier: data.cahier || null
     };
-    this._projects$.next([p, ...this._projects$.value]); this.save(); return p;
+
+    const project = await firstValueFrom(this.api.createProject(projectData));
+    this._projects$.next([project, ...this._projects$.value]);
+    return project;
   }
 
-  update(id: string, patch: Partial<Project>){ this._projects$.next(this._projects$.value.map(p => p.id===id?{...p, ...patch}:p)); this.save(); }
-  remove(id: string){ this._projects$.next(this._projects$.value.filter(p => p.id!==id)); this.save(); this.tasks.removeByProject(id); }
-  setCahier(id: string, cahier: NonNullable<Project['cahier']>){ this.update(id, { cahier }); }
+  async update(id: string, patch: Partial<Project>): Promise<void> {
+    const current = this.byId(id);
+    if (!current) return;
+
+    const updated = await firstValueFrom(this.api.updateProject(id, { ...current, ...patch }));
+    this._projects$.next(this._projects$.value.map(p => p.id === id ? updated : p));
+  }
+
+  async remove(id: string): Promise<void> {
+    await firstValueFrom(this.api.deleteProject(id));
+    this._projects$.next(this._projects$.value.filter(p => p.id !== id));
+  }
+
+  async setCahier(id: string, cahier: NonNullable<Project['cahier']>): Promise<void> {
+    await this.update(id, { cahier });
+  }
+
+  async validateProject(id: string): Promise<void> {
+    const updated = await firstValueFrom(this.api.validateProject(id));
+    this._projects$.next(this._projects$.value.map(p => p.id === id ? { ...p, validatedByChef: true } : p));
+  }
 
   areAllTasksValidatedForProject(projectId: string): boolean {
     const t = this.tasks.byProject(projectId);

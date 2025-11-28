@@ -50,23 +50,27 @@ export class ProjectFormComponent {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   }
 
-  submit() {
+  async submit() {
     const owner = this.auth.currentUser();
     if (!owner || !this.title.trim()) return;
 
-    const p = this.projects.create({
-      title: this.title.trim(),
-      description: this.description,
-      budget: this.budget,
-      durationDays: this.durationDays,
-      deadline: new Date(this.deadline).toISOString(),
-      cahier: this.cahierData
-    });
+    try {
+      const p = await this.projects.create({
+        title: this.title.trim(),
+        description: this.description,
+        budget: this.budget,
+        durationDays: this.durationDays,
+        deadline: new Date(this.deadline).toISOString(),
+        cahier: this.cahierData
+      });
 
-    this.activityLog.log(p.id, 'project_created', `Projet "${p.title}"`);
-    this.toast.show('Projet créé avec succès', 'success');
-    const url = this.auth.isChef() ? ['/chef/projects', p.id] : ['/projects', p.id];
-    this.router.navigate(url);
+      this.activityLog.log(p.id, 'project_created', `Projet "${p.title}"`);
+      this.toast.show('Projet créé avec succès', 'success');
+      const url = this.auth.isChef() ? ['/chef/projects', p.id] : ['/projects', p.id];
+      this.router.navigate(url);
+    } catch (error) {
+      this.toast.show('Erreur lors de la création du projet', 'error');
+    }
   }
 }
 
