@@ -86,8 +86,8 @@ const runTests = async () => {
     if (loggedInUser.role !== 'chef') throw new Error('Wrong role');
   })) passed++; else failed++;
 
-  // Test Login (invalid)
-  if (await test('POST /api/auth/login (invalid)', async () => {
+  // Test Login (invalid password)
+  if (await test('POST /api/auth/login (wrong password)', async () => {
     try {
       await request('POST', '/api/auth/login', {
         email: 'chef@demo.com',
@@ -96,6 +96,101 @@ const runTests = async () => {
       throw new Error('Should have failed');
     } catch (e) {
       if (!e.message.includes('incorrect')) throw e;
+    }
+  })) passed++; else failed++;
+
+  // Test Login (non-existent user)
+  if (await test('POST /api/auth/login (non-existent)', async () => {
+    try {
+      await request('POST', '/api/auth/login', {
+        email: 'nonexistent@example.com',
+        password: 'anypassword'
+      });
+      throw new Error('Should have failed');
+    } catch (e) {
+      if (!e.message.includes('introuvable') && !e.message.includes('incorrect')) throw e;
+    }
+  })) passed++; else failed++;
+
+  // Test Register (new user)
+  const testEmail = `test.${Date.now()}@example.com`;
+  if (await test('POST /api/auth/register (new user)', async () => {
+    const newUser = await request('POST', '/api/auth/register', {
+      name: 'Test Registration User',
+      email: testEmail,
+      password: 'SecurePass123!',
+      role: 'employe',
+      serviceId: services[0].id
+    });
+    if (!newUser.id) throw new Error('No user ID returned');
+    if (newUser.email !== testEmail) throw new Error('Email mismatch');
+    if (newUser.role !== 'employe') throw new Error('Role mismatch');
+  })) passed++; else failed++;
+
+  // Test Login with newly registered user
+  if (await test('POST /api/auth/login (new registered user)', async () => {
+    const user = await request('POST', '/api/auth/login', {
+      email: testEmail,
+      password: 'SecurePass123!'
+    });
+    if (!user.id) throw new Error('No user ID returned');
+    if (user.email !== testEmail) throw new Error('Email mismatch');
+  })) passed++; else failed++;
+
+  // Test Register (duplicate email)
+  if (await test('POST /api/auth/register (duplicate email)', async () => {
+    try {
+      await request('POST', '/api/auth/register', {
+        name: 'Duplicate User',
+        email: testEmail,
+        password: 'AnotherPass123!',
+        role: 'employe'
+      });
+      throw new Error('Should have failed');
+    } catch (e) {
+      if (!e.message.includes('déjà utilisé') && !e.message.includes('400')) throw e;
+    }
+  })) passed++; else failed++;
+
+  // Test Register (missing fields)
+  if (await test('POST /api/auth/register (missing fields)', async () => {
+    try {
+      await request('POST', '/api/auth/register', {
+        name: '',
+        email: '',
+        password: ''
+      });
+      throw new Error('Should have failed');
+    } catch (e) {
+      if (!e.message.includes('requis') && !e.message.includes('400')) throw e;
+    }
+  })) passed++; else failed++;
+
+  // Test Register (invalid email)
+  if (await test('POST /api/auth/register (invalid email)', async () => {
+    try {
+      await request('POST', '/api/auth/register', {
+        name: 'Test User',
+        email: 'invalidemail',
+        password: 'Password123!'
+      });
+      throw new Error('Should have failed');
+    } catch (e) {
+      if (!e.message.includes('invalide') && !e.message.includes('400')) throw e;
+    }
+  })) passed++; else failed++;
+
+  // Test Register (short password)
+  if (await test('POST /api/auth/register (short password)', async () => {
+    try {
+      await request('POST', '/api/auth/register', {
+        name: 'Test User',
+        email: 'shortpass@example.com',
+        password: '123'
+      });
+      throw new Error('Should have failed');
+    } catch (e) {
+      if (!e.message.includes('caractères') && !e.message.includes('400')) throw e;
     }
   })) passed++; else failed++;
 

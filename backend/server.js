@@ -111,15 +111,27 @@ app.post('/api/auth/login', (req, res) => {
 app.post('/api/auth/register', (req, res) => {
   const { name, email, password, role, serviceId } = req.body;
 
+  // Validation
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: 'Nom, email et mot de passe sont requis' });
+  }
+  if (!email.includes('@')) {
+    return res.status(400).json({ error: 'Email invalide' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères' });
+  }
+
   const existing = queryOne('SELECT id FROM employees WHERE email = ?', [email]);
   if (existing) {
     return res.status(400).json({ error: 'Email déjà utilisé' });
   }
 
   const id = uuidv4();
+  const userRole = role || 'employe';
   run(`INSERT INTO employees (id, name, email, password_hash, role, service_id, is_active, created_at)
        VALUES (?, ?, ?, ?, ?, ?, 1, ?)`,
-      [id, name, email, hashPassword(password), role, serviceId, new Date().toISOString()]);
+      [id, name, email, hashPassword(password), userRole, serviceId, new Date().toISOString()]);
   saveDb();
 
   const user = queryOne('SELECT * FROM employees WHERE id = ?', [id]);
