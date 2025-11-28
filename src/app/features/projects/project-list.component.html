@@ -1,0 +1,55 @@
+<div class="page-header">
+  <h1><span class="icon-box">📁</span> Mes Projets</h1>
+  <a class="btn primary" routerLink="/projects/new">➕ Nouveau projet</a>
+</div>
+
+<div class="card">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem;">
+    <div class="search-box" style="width:300px;">
+      <span>🔍</span>
+      <input type="text" [(ngModel)]="query" placeholder="Rechercher un projet..."/>
+    </div>
+    <div class="small">{{ filtered().length }} projet(s)</div>
+  </div>
+
+  <table class="table" *ngIf="filtered().length > 0; else noProjects">
+    <thead>
+      <tr>
+        <th>Titre</th>
+        <th>Budget</th>
+        <th>Échéance</th>
+        <th>Statut</th>
+        <th>CPS</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let p of filtered()" (click)="open(p)" style="cursor:pointer;">
+        <td style="font-weight:500;">{{ p.title }}</td>
+        <td>{{ p.budget | currency:'EUR':'symbol':'1.0-0' }}</td>
+        <td>{{ p.deadline | date:'dd MMM yyyy' }}</td>
+        <td>
+          <span class="badge" [class.etat-validee]="p.validatedByChef" [class.etat-en_cours]="!p.validatedByChef">
+            {{ p.validatedByChef ? 'Validé' : 'En cours' }}
+          </span>
+        </td>
+        <td>
+          <span *ngIf="p.cahier" style="color:#22c55e;">📎 Oui</span>
+          <span *ngIf="!p.cahier" class="small">—</span>
+        </td>
+        <td>
+          <button class="btn danger" (click)="$event.stopPropagation(); remove(p)" title="Supprimer">🗑️</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <ng-template #noProjects>
+    <div style="text-align:center;padding:3rem;">
+      <div style="font-size:3rem;margin-bottom:1rem;">📂</div>
+      <p class="small">Aucun projet trouvé</p>
+      <a class="btn primary" routerLink="/projects/new">Créer un projet</a>
+    </div>
+  </ng-template>
+</div>
+

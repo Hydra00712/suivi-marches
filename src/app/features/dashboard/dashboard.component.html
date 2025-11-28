@@ -1,0 +1,170 @@
+<div class="page-header">
+  <h1><span class="icon-box">📊</span> Dashboard</h1>
+  <div class="header-actions-row">
+    <span class="small">Données en temps réel • Auto-refresh: 30s</span>
+    <button class="btn-refresh" (click)="refreshAllCharts()" title="Actualiser les données">
+      🔄 Actualiser
+    </button>
+  </div>
+</div>
+
+<!-- Stat Cards - All values from actual database -->
+<div class="grid cols-4" style="margin-bottom:1.5rem;">
+  <div class="stat-card gradient-pink">
+    <div class="stat-icon">📁</div>
+    <div class="stat-label">Total Projets</div>
+    <div class="stat-value">{{ totalProjects }}</div>
+    <div class="stat-change">Base de données</div>
+  </div>
+  <div class="stat-card gradient-blue">
+    <div class="stat-icon">✅</div>
+    <div class="stat-label">Projets Validés</div>
+    <div class="stat-value">{{ validatedProjects }}</div>
+    <div class="stat-change">Taux: {{ totalProjects > 0 ? ((validatedProjects / totalProjects) * 100).toFixed(0) : 0 }}%</div>
+  </div>
+  <div class="stat-card gradient-teal">
+    <div class="stat-icon">📋</div>
+    <div class="stat-label">Tâches Totales</div>
+    <div class="stat-value">{{ totalTasks }}</div>
+    <div class="stat-change">Complétion: {{ completionRate }}%</div>
+  </div>
+  <div class="stat-card gradient-purple">
+    <div class="stat-icon">💰</div>
+    <div class="stat-label">Budget Total</div>
+    <div class="stat-value">{{ formatBudget(stats.kpis().budgets) }}</div>
+    <div class="stat-change">Somme réelle</div>
+  </div>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="grid cols-2" style="margin-bottom:1.5rem;">
+  <!-- Trend Chart - Dynamic from project creation dates -->
+  <div class="card chart-card">
+    <h3 class="card-title">📈 Projets Créés (6 derniers mois)</h3>
+    <p class="chart-subtitle">Données dynamiques basées sur les dates de création</p>
+    <div class="trend-chart" *ngIf="trendData.length > 0">
+      <div class="trend-bars">
+        <div class="trend-bar" *ngFor="let point of trendData">
+          <div class="bar-wrapper">
+            <div class="bar-column"
+                 [style.height.px]="point.value > 0 ? (point.height * 1.4) : 8"
+                 [class.empty]="point.value === 0">
+              <span class="bar-tooltip">{{ point.value }} projet{{ point.value !== 1 ? 's' : '' }}</span>
+            </div>
+          </div>
+          <span class="bar-month">{{ point.label }}</span>
+        </div>
+      </div>
+    </div>
+    <p class="no-data" *ngIf="trendData.length === 0">Aucune donnée disponible</p>
+  </div>
+
+  <!-- Pie Chart - Dynamic from task states -->
+  <div class="card chart-card">
+    <h3 class="card-title">🎯 Répartition des Tâches</h3>
+    <p class="chart-subtitle">Distribution par état depuis la base de données</p>
+    <div class="pie-chart-container" *ngIf="totalTasks > 0">
+      <div class="pie-chart">
+        <svg viewBox="0 0 100 100" class="pie-svg">
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#374151" stroke-width="20"/>
+          <circle *ngFor="let seg of pieSegments"
+            cx="50" cy="50" r="40" fill="none"
+            [attr.stroke]="seg.color"
+            stroke-width="20"
+            [attr.stroke-dasharray]="seg.percent * 2.51 + ' ' + (251 - seg.percent * 2.51)"
+            [attr.stroke-dashoffset]="-(seg.offset * 2.51) + 62.75"
+            class="pie-segment"
+          />
+        </svg>
+        <div class="pie-center">
+          <span class="pie-total">{{ totalTasks }}</span>
+          <span class="pie-label">Tâches</span>
+        </div>
+      </div>
+      <div class="pie-legend">
+        <div class="legend-item" *ngFor="let seg of pieSegments">
+          <span class="legend-dot" [style.background]="seg.color"></span>
+          <span class="legend-label">{{ seg.label }}</span>
+          <span class="legend-value">{{ seg.value }} ({{ seg.percent.toFixed(0) }}%)</span>
+        </div>
+      </div>
+    </div>
+    <p class="no-data" *ngIf="totalTasks === 0">Aucune tâche dans la base de données</p>
+  </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="grid cols-2" style="margin-bottom:1.5rem;">
+  <!-- Bar Chart - Tasks by State (Dynamic) -->
+  <div class="card chart-card">
+    <h3 class="card-title">📊 Statistiques des Tâches</h3>
+    <p class="chart-subtitle">Comptage dynamique depuis la base de données</p>
+    <div class="bar-chart" *ngIf="totalTasks > 0; else noTasksBar">
+      <div class="bar-row" *ngFor="let seg of pieSegments">
+        <div class="bar-label">
+          <span class="status-dot" [style.background]="seg.color"></span>
+          {{ seg.label }}
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" [style.width.%]="seg.percent" [style.background]="seg.color"></div>
+        </div>
+        <div class="bar-value">{{ seg.value }}</div>
+      </div>
+    </div>
+    <ng-template #noTasksBar><p class="no-data">Aucune tâche dans la base de données</p></ng-template>
+  </div>
+
+  <!-- Top Projects (Dynamic - sorted by progress) -->
+  <div class="card chart-card">
+    <h3 class="card-title">🏆 Top 5 Projets (par progression)</h3>
+    <p class="chart-subtitle">Triés par taux de complétion des tâches</p>
+    <div class="top-projects" *ngIf="topProjects.length > 0; else noTopProjects">
+      <div class="project-row" *ngFor="let p of topProjects; let i = index">
+        <span class="project-rank" [class.gold]="i === 0" [class.silver]="i === 1" [class.bronze]="i === 2">{{ i + 1 }}</span>
+        <div class="project-info">
+          <div class="project-name">{{ p.name }}</div>
+          <div class="project-progress-bar">
+            <div class="progress-fill" [style.width.%]="p.progress"
+                 [class.low]="p.progress < 30" [class.medium]="p.progress >= 30 && p.progress < 70" [class.high]="p.progress >= 70"></div>
+          </div>
+        </div>
+        <span class="project-percent">{{ p.progress }}%</span>
+        <span class="project-budget">{{ formatBudget(p.budget) }}</span>
+      </div>
+    </div>
+    <ng-template #noTopProjects><p class="no-data">Aucun projet dans la base de données</p></ng-template>
+  </div>
+</div>
+
+<!-- Deadlines & Budget (Dynamic) -->
+<div class="grid cols-2">
+  <div class="card">
+    <h3 class="card-title">⏰ Échéances Proches (15 jours)</h3>
+    <p class="chart-subtitle">Tâches avec deadline dans les 15 prochains jours</p>
+    <table class="table" *ngIf="stats.nearDeadlines(15).length > 0; else noDeadlines">
+      <thead><tr><th>Tâche</th><th>Échéance</th><th>État</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let t of stats.nearDeadlines(15)">
+          <td>{{ t.title }}</td>
+          <td>{{ t.finalDate | date:'dd MMM yyyy' }}</td>
+          <td><span class="badge etat-{{ t.state }}">{{ t.state }}</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <ng-template #noDeadlines><p class="no-data">Aucune échéance dans les 15 prochains jours</p></ng-template>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">💼 Budget par Service</h3>
+    <p class="chart-subtitle">Somme des budgets projets par service</p>
+    <div class="bar-chart" *ngIf="budgetByService.length > 0; else noBudget">
+      <div class="bar-row" *ngFor="let b of budgetByService; let i = index">
+        <div class="bar-label">{{ b.serviceName }} <span class="project-count">({{ b.projectCount }})</span></div>
+        <div class="bar-track"><div class="bar-fill" [class]="getBarColor(i)" [style.width.%]="b.percent"></div></div>
+        <div class="bar-value">{{ formatBudget(b.budget) }}</div>
+      </div>
+    </div>
+    <ng-template #noBudget><p class="no-data">Aucun budget enregistré</p></ng-template>
+  </div>
+</div>
+

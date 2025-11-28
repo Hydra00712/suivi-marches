@@ -1,0 +1,45 @@
+<div class="cps-preview" *ngIf="cahier">
+  <!-- File Info -->
+  <div class="cps-file-info">
+    <div class="file-icon">{{ fileTypeIcon }}</div>
+    <div class="file-details">
+      <div class="file-name">{{ cahier.fileName }}</div>
+      <div class="file-meta">
+        <span class="file-type">{{ fileTypeName }}</span>
+        <span class="file-size">{{ formatSize(cahier.size) }}</span>
+      </div>
+    </div>
+    <div class="file-actions">
+      <button *ngIf="isPdf" class="btn" (click)="togglePreview()">
+        {{ showPreview ? '🔼 Fermer' : '👁️ Aperçu' }}
+      </button>
+      <button class="btn primary" (click)="download()">⬇️ Télécharger</button>
+    </div>
+  </div>
+
+  <!-- PDF Preview Panel -->
+  <div *ngIf="isPdf && showPreview" class="cps-preview-panel">
+    <object
+      [data]="dataUrl"
+      type="application/pdf"
+      class="pdf-viewer"
+    >
+      <p>Impossible d'afficher le PDF. 
+        <a [href]="dataUrl" target="_blank">Cliquez ici pour ouvrir</a>
+      </p>
+    </object>
+  </div>
+
+  <!-- Non-PDF Notice -->
+  <div *ngIf="!isPdf" class="cps-no-preview">
+    <span class="no-preview-icon">ℹ️</span>
+    <span>L'aperçu n'est disponible que pour les fichiers PDF</span>
+  </div>
+</div>
+
+<!-- No CPS -->
+<div *ngIf="!cahier" class="cps-empty">
+  <div class="empty-icon">📄</div>
+  <p>Aucun cahier des charges</p>
+</div>
+

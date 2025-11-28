@@ -1,0 +1,5 @@
+<button class="btn" (click)="open()" title="Notifications" style="position:relative;">
+  🔔
+  <span *ngIf="(notifs.unreadCount$ | async) as c" [style.display]="c>0?'inline-flex':'none'" style="position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border-radius:999px;padding:0 .4rem;font-size:.7rem;align-items:center;justify-content:center;">{{ c }}</span>
+</button>
+

@@ -1,0 +1,19 @@
+<form (ngSubmit)="submit()" style="display:grid;gap:.75rem;margin-bottom:1.5rem;padding:1rem;background:#f8f9fa;border-radius:10px;">
+  <div class="grid cols-3">
+    <div class="form-group" style="margin:0;">
+      <label style="font-size:.8rem;">Titre *</label>
+      <input class="input" name="title" [(ngModel)]="title" placeholder="Nom de la tâche" required />
+    </div>
+    <div class="form-group" style="margin:0;">
+      <label style="font-size:.8rem;">Durée (jours)</label>
+      <input class="input" type="number" name="durationDays" [(ngModel)]="durationDays" placeholder="5" />
+    </div>
+    <div class="form-group" style="margin:0;">
+      <label style="font-size:.8rem;">Date finale</label>
+      <input class="input" type="date" name="finalDate" [(ngModel)]="finalDate" />
+    </div>
+  </div>
+  <textarea class="input" name="description" [(ngModel)]="description" rows="2" placeholder="Description de la tâche (optionnel)"></textarea>
+  <button type="submit" class="btn primary" [disabled]="!title.trim()">➕ Ajouter la tâche</button>
+</form>
+

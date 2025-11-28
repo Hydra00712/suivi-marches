@@ -1,0 +1,30 @@
+﻿<div class="page-header">
+  <h1><span class="icon-box">🔔</span> Notifications</h1>
+  <div *ngIf="me() as u" style="display:flex;gap:.5rem;">
+    <button class="btn" (click)="markAllRead()">✓ Tout marquer comme lu</button>
+    <button class="btn danger" (click)="clearAll()">🗑️ Tout effacer</button>
+  </div>
+</div>
+
+<div *ngIf="me() as u">
+  <div *ngIf="notifs.forUser(u.id).length === 0" class="card" style="text-align:center;padding:3rem;">
+    <div style="font-size:3rem;margin-bottom:1rem;">🔔</div>
+    <p class="small">Aucune notification</p>
+  </div>
+
+  <div *ngFor="let n of notifs.forUser(u.id)" class="card" style="margin-bottom:.75rem;" [style.opacity]="n.read ? '.6' : '1'">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;">
+      <div style="display:flex;gap:.75rem;">
+        <div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;" [style.background]="n.type === 'deadline' ? '#fef3c7' : '#dbeafe'">
+          {{ n.type === 'deadline' ? '⏰' : '📋' }}
+        </div>
+        <div>
+          <div style="font-weight:600;">{{ n.title }}</div>
+          <div class="small" style="margin-top:.25rem;">{{ n.message }}</div>
+          <div class="small" style="margin-top:.5rem;color:#9ca3af;">{{ n.createdAt | date:'dd MMM yyyy, HH:mm' }}</div>
+        </div>
+      </div>
+      <button class="btn" *ngIf="!n.read" (click)="markRead(n.id)">Marquer lu</button>
+    </div>
+  </div>
+</div>

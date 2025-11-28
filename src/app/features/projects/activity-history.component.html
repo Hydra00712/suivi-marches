@@ -1,0 +1,29 @@
+<div class="activity-history">
+  <!-- Empty State -->
+  <div *ngIf="logs.length === 0" class="empty-state">
+    <div class="empty-icon">📜</div>
+    <p>Aucune activité enregistrée</p>
+  </div>
+
+  <!-- Activity List -->
+  <div *ngIf="logs.length > 0" class="activity-list">
+    <div *ngFor="let log of logs" class="activity-item">
+      <div class="activity-icon">
+        {{ activityService.getActionIcon(log.action) }}
+      </div>
+      <div class="activity-content">
+        <div class="activity-header">
+          <span class="activity-action">{{ activityService.getActionLabel(log.action) }}</span>
+          <span class="activity-time">{{ getRelativeTime(log.timestamp) }}</span>
+        </div>
+        <div class="activity-actor">
+          Par <strong>{{ log.actorName }}</strong>
+        </div>
+        <div *ngIf="log.details" class="activity-details">
+          {{ log.details }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,123 @@
+<div class="register-wrapper">
+  <div class="register-card">
+    <!-- Header -->
+    <div class="register-header">
+      <div class="register-logo">
+        <span>SM</span>
+      </div>
+      <h1>Créer un compte</h1>
+      <p>Rejoignez Suivi Marchés</p>
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-banner" *ngIf="successMessage">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      <span>{{ successMessage }}</span>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-banner" *ngIf="errorMessage">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span>{{ errorMessage }}</span>
+      <button type="button" class="error-close" (click)="clearMessages()">×</button>
+    </div>
+
+    <!-- Register Form -->
+    <form (ngSubmit)="submit()">
+      <!-- Name -->
+      <div class="form-group">
+        <label for="name">Nom complet</label>
+        <input id="name" type="text" class="form-input" [(ngModel)]="name" name="name"
+               placeholder="Jean Dupont" autocomplete="name" (focus)="clearMessages()"/>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">Adresse email</label>
+        <input id="email" type="email" class="form-input" [(ngModel)]="email" name="email"
+               placeholder="jean.dupont@entreprise.com" autocomplete="email" (focus)="clearMessages()"/>
+      </div>
+
+      <!-- Role Selection -->
+      <div class="form-group">
+        <label>Rôle</label>
+        <div class="role-selector">
+          <label class="role-option" [class.selected]="role === 'employe'">
+            <input type="radio" name="role" [(ngModel)]="role" value="employe"/>
+            <span class="role-icon">👤</span>
+            <span class="role-label">Employé</span>
+          </label>
+          <label class="role-option" [class.selected]="role === 'chef'">
+            <input type="radio" name="role" [(ngModel)]="role" value="chef"/>
+            <span class="role-icon">👔</span>
+            <span class="role-label">Chef</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Service -->
+      <div class="form-group">
+        <label for="service">Service</label>
+        <select id="service" class="form-input" [(ngModel)]="serviceId" name="serviceId">
+          <option *ngFor="let s of services" [value]="s.id">{{ s.name }}</option>
+        </select>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label for="password">Mot de passe</label>
+        <div class="password-wrapper">
+          <input id="password" [type]="showPassword ? 'text' : 'password'" class="form-input"
+                 [(ngModel)]="password" name="password" placeholder="Min. 6 caractères"
+                 autocomplete="new-password" (focus)="clearMessages()"/>
+          <button type="button" class="password-toggle" (click)="togglePassword()">
+            <span *ngIf="!showPassword">👁️</span>
+            <span *ngIf="showPassword">🙈</span>
+          </button>
+        </div>
+        <div class="password-strength" *ngIf="password">
+          <div class="strength-bar" [class.weak]="password.length < 6" 
+               [class.medium]="password.length >= 6 && password.length < 10"
+               [class.strong]="password.length >= 10"></div>
+          <span class="strength-text" [class.weak]="password.length < 6"
+                [class.medium]="password.length >= 6 && password.length < 10"
+                [class.strong]="password.length >= 10">
+            {{ password.length < 6 ? 'Faible' : password.length < 10 ? 'Moyen' : 'Fort' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="form-group">
+        <label for="confirmPassword">Confirmer le mot de passe</label>
+        <input id="confirmPassword" [type]="showPassword ? 'text' : 'password'" class="form-input"
+               [(ngModel)]="confirmPassword" name="confirmPassword" placeholder="Répétez le mot de passe"
+               autocomplete="new-password" (focus)="clearMessages()"/>
+        <div class="match-indicator" *ngIf="confirmPassword">
+          <span *ngIf="password === confirmPassword" class="match">✓ Correspond</span>
+          <span *ngIf="password !== confirmPassword" class="no-match">✗ Ne correspond pas</span>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="btn-register" [disabled]="isLoading">
+        <span *ngIf="!isLoading">Créer mon compte</span>
+        <span *ngIf="isLoading">Création en cours...</span>
+      </button>
+    </form>
+
+    <!-- Login Link -->
+    <div class="login-link">
+      <span>Déjà un compte ?</span>
+      <a routerLink="/login">Se connecter</a>
+    </div>
+  </div>
+</div>
+

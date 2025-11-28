@@ -1,0 +1,28 @@
+<div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+  <div style="display:flex;align-items:center;gap:1rem;">
+    <a routerLink="/" class="brand" style="display:flex;align-items:center;gap:.6rem;text-decoration:none;">
+      <div style="width:28px;height:28px;border-radius:8px;background:var(--brand);display:flex;align-items:center;justify-content:center;font-weight:700;">SM</div>
+      <div style="font-weight:700;">Suivi Marchés</div>
+    </a>
+    <nav class="nav">
+      <a *ngIf="auth.isEmployee()" class="link" routerLink="/projects">Mes projets</a>
+      <a *ngIf="auth.isChef()" class="link" routerLink="/chef/projects">Projets</a>
+      <a *ngIf="auth.isChef()" class="link" routerLink="/chef/dashboard">Dashboard</a>
+      <a class="link" routerLink="/projects/new">Créer</a>
+      <a *ngIf="auth.isEmployee()" class="link" routerLink="/notifications">Notifications</a>
+      <a *ngIf="auth.isChef()" class="link" routerLink="/chef/notifications">Notifications</a>
+    </nav>
+  </div>
+  <div style="display:flex;align-items:center;gap:.8rem;">
+    <app-notifications-bell></app-notifications-bell>
+    <div class="profile" (click)="open=!open" style="position:relative;cursor:pointer;">
+      <span class="small" [style.color]="'#cbd5e1'">{{ auth.currentRole() }}</span>
+      <span style="font-weight:600;">{{ auth.currentUser()?.name || 'Invité' }}</span>
+      <div *ngIf="open" class="menu card" style="position:absolute;right:0;top:140%;min-width:180px;">
+        <div class="small">Rôle: {{ auth.currentRole() }}</div>
+        <button class="btn" (click)="logout()">Se déconnecter</button>
+      </div>
+    </div>
+  </div>
+</div>
+

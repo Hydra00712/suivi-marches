@@ -1,0 +1,86 @@
+<!-- Splash Screen -->
+<app-splash-screen *ngIf="showSplash" (complete)="onSplashComplete()"></app-splash-screen>
+
+<!-- Confetti Celebration -->
+<app-confetti></app-confetti>
+
+<!-- Keyboard Shortcuts Modal -->
+<app-keyboard-shortcuts></app-keyboard-shortcuts>
+
+<div class="app-layout" *ngIf="auth.currentUser() && !showSplash; else loginView">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">📊</div>
+      <div class="name">Suivi Marchés</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar">{{ getInitials() }}</div>
+      <div class="info">
+        <div class="uname">{{ auth.currentUser()?.name }}</div>
+        <div class="urole">{{ auth.isChef() ? 'Chef de service' : 'Employé' }}</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a *ngIf="auth.isChef()" routerLink="/chef/dashboard" routerLinkActive="active">
+        <span class="icon">📊</span> Dashboard
+      </a>
+      <a *ngIf="auth.isEmployee()" routerLink="/projects" routerLinkActive="active">
+        <span class="icon">📁</span> Mes Projets
+      </a>
+      <a *ngIf="auth.isChef()" routerLink="/chef/projects" routerLinkActive="active">
+        <span class="icon">📁</span> Projets
+      </a>
+      <a routerLink="/projects/new" routerLinkActive="active">
+        <span class="icon">➕</span> Nouveau Projet
+      </a>
+      <a *ngIf="auth.isChef()" routerLink="/chef/stats/employes" routerLinkActive="active">
+        <span class="icon">👥</span> Stats Employés
+      </a>
+      <a *ngIf="auth.isEmployee()" routerLink="/notifications" routerLinkActive="active">
+        <span class="icon">🔔</span> Notifications
+      </a>
+      <a *ngIf="auth.isChef()" routerLink="/chef/notifications" routerLinkActive="active">
+        <span class="icon">🔔</span> Notifications
+      </a>
+      <a *ngIf="auth.isEmployee()" routerLink="/settings" routerLinkActive="active">
+        <span class="icon">⚙️</span> Préférences
+      </a>
+      <a *ngIf="auth.isChef()" routerLink="/chef/settings" routerLinkActive="active">
+        <span class="icon">⚙️</span> Préférences
+      </a>
+      <a (click)="logout()" style="cursor:pointer;margin-top:auto;">
+        <span class="icon">🚪</span> Déconnexion
+      </a>
+    </nav>
+
+    <!-- Keyboard shortcut hint -->
+    <div class="sidebar-footer">
+      <span class="shortcut-hint">Appuyez <kbd>?</kbd> pour les raccourcis</span>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-content">
+    <header class="top-header">
+      <app-global-search></app-global-search>
+      <div class="header-actions">
+        <app-theme-toggle></app-theme-toggle>
+        <div class="header-user">
+          <div class="avatar">{{ getInitials() }}</div>
+          <span style="font-weight:500;">{{ auth.currentUser()?.name }}</span>
+        </div>
+      </div>
+    </header>
+    <main class="page-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
+
+<ng-template #loginView>
+  <router-outlet *ngIf="!showSplash"></router-outlet>
+</ng-template>
+
+<app-toast></app-toast>
+

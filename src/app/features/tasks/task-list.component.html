@@ -1,0 +1,43 @@
+<div *ngIf="list().length === 0" style="text-align:center;padding:2rem;color:#9ca3af;">
+  <div style="font-size:2rem;margin-bottom:.5rem;">📋</div>
+  <p>Aucune tâche pour ce projet</p>
+</div>
+
+<table class="table" *ngIf="list().length > 0">
+  <thead>
+    <tr>
+      <th>Tâche</th>
+      <th>Échéance</th>
+      <th>Durée</th>
+      <th>État</th>
+      <th style="text-align:right;">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let t of list()">
+      <td>
+        <div style="font-weight:500;">{{ t.title }}</div>
+        <div *ngIf="t.description" class="small" style="margin-top:.25rem;">{{ t.description }}</div>
+      </td>
+      <td>{{ t.finalDate | date:'dd MMM yyyy' }}</td>
+      <td>{{ t.durationDays }} jours</td>
+      <td>
+        <span class="badge" [class]="'etat-' + t.state">
+          {{ t.state === 'validee' ? '✅ Validée' : t.state === 'en_cours' ? '⏳ En cours' : '📝 À faire' }}
+        </span>
+        <div *ngIf="t.validatedBy.length > 0" class="small" style="margin-top:.25rem;">
+          {{ t.validatedBy.length }} validation(s)
+        </div>
+      </td>
+      <td>
+        <div style="display:flex;gap:.4rem;justify-content:flex-end;">
+          <button class="btn" (click)="setState(t, 'en_cours')" title="Marquer en cours">⏳</button>
+          <button class="btn success" (click)="validate(t)" title="Valider">✅</button>
+          <button class="btn" (click)="markNotPertinent(t)" title="Non pertinent">🚫</button>
+          <button class="btn danger" (click)="remove(t)" title="Supprimer">🗑️</button>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+

@@ -1,0 +1,49 @@
+<div class="page-header">
+  <h1><span class="icon-box">⚙️</span> Préférences de notification</h1>
+</div>
+
+<div class="card" style="max-width:600px;">
+  <div class="settings-section">
+    <h3>🔔 Alertes</h3>
+    <div class="settings-list">
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <div class="settings-item-label">Alertes d'échéance</div>
+          <div class="settings-item-desc">Recevoir des notifications pour les tâches proches de leur date limite</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" [checked]="preferences.receiveDeadlineAlerts" (change)="toggleDeadlineAlerts()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <div class="settings-item-label">Alertes "Non pertinent"</div>
+          <div class="settings-item-desc">Recevoir des notifications quand une tâche est marquée non pertinente</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" [checked]="preferences.receiveNonPertinentAlerts" (change)="toggleNonPertinentAlerts()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <h3>📋 Affichage</h3>
+    <div class="settings-list">
+      <div class="settings-item">
+        <div class="settings-item-info">
+          <div class="settings-item-label">Grouper par projet</div>
+          <div class="settings-item-desc">Regrouper les notifications par projet dans la liste</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" [checked]="preferences.groupNotificationsByProject" (change)="toggleGroupByProject()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+

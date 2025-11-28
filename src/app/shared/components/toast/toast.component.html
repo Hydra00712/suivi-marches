@@ -1,0 +1,6 @@
+<div class="toasts">
+  <div *ngFor="let t of toasts" class="toast" [class.succ]="t.type==='success'" [class.err]="t.type==='error'">
+    {{ t.text }}
+  </div>
+</div>
+

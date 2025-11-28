@@ -1,0 +1,61 @@
+<div class="global-search">
+  <div class="search-input-wrapper">
+    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/>
+      <path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input
+      #searchInput
+      type="text"
+      class="search-input"
+      [(ngModel)]="query"
+      (input)="onSearch()"
+      (keydown)="onKeyDown($event)"
+      (focus)="onSearch()"
+      placeholder="Rechercher... (Ctrl+K)"
+      autocomplete="off"
+    />
+    <span class="search-shortcut" *ngIf="!query">⌘K</span>
+    <button class="clear-btn" *ngIf="query" (click)="close()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Results Dropdown -->
+  <div class="search-results" *ngIf="isOpen">
+    <div class="results-header">
+      <span>{{ results.length }} résultat(s)</span>
+      <span class="hint">↑↓ naviguer • ↵ sélectionner • esc fermer</span>
+    </div>
+    
+    <div class="results-list">
+      <button
+        *ngFor="let result of results; let i = index"
+        class="result-item"
+        [class.selected]="i === selectedIndex"
+        (click)="selectResult(result)"
+        (mouseenter)="selectedIndex = i"
+      >
+        <span class="result-icon">{{ result.icon }}</span>
+        <div class="result-content">
+          <div class="result-title">{{ result.title }}</div>
+          <div class="result-subtitle">{{ result.subtitle }}</div>
+        </div>
+        <span class="result-type">{{ getTypeLabel(result.type) }}</span>
+      </button>
+    </div>
+
+    <div class="no-results" *ngIf="results.length === 0 && query.length >= 2">
+      <span>🔍</span>
+      <p>Aucun résultat pour "{{ query }}"</p>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div class="search-loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+  </div>
+</div>
+

@@ -1,0 +1,116 @@
+<ng-container *ngIf="project as p; else notFound">
+  <div class="page-header">
+    <h1><span class="icon-box">📋</span> {{ p.title }}</h1>
+    <span class="badge" [class.etat-validee]="p.validatedByChef" [class.etat-en_cours]="!p.validatedByChef" style="font-size:.9rem;padding:.4rem .8rem;">
+      {{ p.validatedByChef ? '✅ Validé par le chef' : '⏳ En cours' }}
+    </span>
+  </div>
+
+  <div class="grid cols-2" style="margin-bottom:1.5rem;">
+    <!-- Project Info -->
+    <div class="card">
+      <h3 class="card-title">📝 Informations</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div>
+          <div class="small">Budget</div>
+          <div style="font-size:1.25rem;font-weight:600;color:#7c3aed;">{{ p.budget | currency:'EUR':'symbol':'1.0-0' }}</div>
+        </div>
+        <div>
+          <div class="small">Durée</div>
+          <div style="font-size:1.25rem;font-weight:600;">{{ p.durationDays }} jours</div>
+        </div>
+        <div>
+          <div class="small">Échéance</div>
+          <div style="font-size:1.1rem;font-weight:500;">{{ p.deadline | date:'dd MMMM yyyy' }}</div>
+        </div>
+        <div>
+          <div class="small">Créé le</div>
+          <div style="font-size:1.1rem;font-weight:500;">{{ p.createdAt | date:'dd MMM yyyy' }}</div>
+        </div>
+      </div>
+
+      <div *ngIf="p.description" style="margin-top:1rem;padding-top:1rem;border-top:1px solid #e9ecef;">
+        <div class="small" style="margin-bottom:.5rem;">Description</div>
+        <p style="margin:0;white-space:pre-wrap;">{{ p.description }}</p>
+      </div>
+    </div>
+
+    <!-- Cahier des Charges with Preview -->
+    <div class="card">
+      <h3 class="card-title">📄 Cahier des Charges</h3>
+      <app-cps-preview [cahier]="p.cahier"></app-cps-preview>
+
+      <div class="file-upload" [class.has-file]="false" (click)="fileInput.click()" style="margin-top:1rem;">
+        <input #fileInput type="file" (change)="onCahierSelected($event)" accept=".pdf,.doc,.docx,.xls,.xlsx"/>
+        <div class="upload-icon">📤</div>
+        <div class="upload-text">{{ p.cahier ? 'Remplacer le fichier' : 'Ajouter un fichier' }}</div>
+      </div>
+
+      <div *ngIf="auth.isChef()" style="margin-top:1rem;padding-top:1rem;border-top:1px solid #e9ecef;">
+        <button class="btn" [class.success]="!p.validatedByChef" [class.danger]="p.validatedByChef" (click)="toggleChefValidation()" style="width:100%;">
+          {{ p.validatedByChef ? '❌ Retirer la validation' : '✅ Valider le projet' }}
+        </button>
+        <p *ngIf="!canValidate()" class="small" style="margin-top:.5rem;text-align:center;">
+          ⚠️ Toutes les tâches doivent être validées avant de valider le projet
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="tabs-nav" style="margin-bottom:1rem;">
+    <button class="tab-btn" [class.active]="activeTab === 'tasks'" (click)="setTab('tasks')">
+      📋 Tâches
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'approvals'" (click)="setTab('approvals')">
+      ✅ Approbations
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'timeline'" (click)="setTab('timeline')">
+      📅 Timeline
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'history'" (click)="setTab('history')">
+      📜 Historique
+    </button>
+  </div>
+
+  <!-- Tasks Tab -->
+  <div class="card" *ngIf="activeTab === 'tasks'" style="margin-bottom:1.5rem;">
+    <h3 class="card-title">📋 Tâches</h3>
+    <app-task-form [projectId]="p.id"></app-task-form>
+    <app-task-list [projectId]="p.id"></app-task-list>
+  </div>
+
+  <!-- Approvals Tab -->
+  <div class="card" *ngIf="activeTab === 'approvals'" style="margin-bottom:1.5rem;">
+    <h3 class="card-title">✅ Matrice d'approbation</h3>
+    <app-approval-matrix [projectId]="p.id"></app-approval-matrix>
+  </div>
+
+  <!-- Timeline Tab -->
+  <div class="card" *ngIf="activeTab === 'timeline'" style="margin-bottom:1.5rem;">
+    <h3 class="card-title">📅 Timeline des tâches</h3>
+    <app-task-timeline [projectId]="p.id"></app-task-timeline>
+  </div>
+
+  <!-- History Tab -->
+  <div class="card" *ngIf="activeTab === 'history'" style="margin-bottom:1.5rem;">
+    <h3 class="card-title">📜 Historique d'activité</h3>
+    <app-activity-history [projectId]="p.id"></app-activity-history>
+  </div>
+
+  <!-- Comments Section (always visible) -->
+  <div class="card">
+    <h3 class="card-title">💬 Commentaires</h3>
+    <app-comment-list [projectId]="p.id"></app-comment-list>
+  </div>
+</ng-container>
+
+<ng-template #notFound>
+  <div class="card" style="text-align:center;padding:3rem;">
+    <div style="font-size:3rem;margin-bottom:1rem;">🔍</div>
+    <h2>Projet introuvable</h2>
+    <p class="small">Ce projet n'existe pas ou a été supprimé.</p>
+    <a class="btn primary" [routerLink]="auth.isChef() ? '/chef/projects' : '/projects'">Retour aux projets</a>
+  </div>
+</ng-template>
+

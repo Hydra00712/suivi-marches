@@ -1,0 +1,97 @@
+<div class="page-header">
+  <h1><span class="icon-box">👥</span> Statistiques par employé</h1>
+</div>
+
+<!-- Summary Stats -->
+<div class="stats-grid">
+  <div class="mini-stat">
+    <div class="stat-value">{{ totalEmployees }}</div>
+    <div class="stat-label">Employés</div>
+  </div>
+  <div class="mini-stat">
+    <div class="stat-value">{{ totalValidations }}</div>
+    <div class="stat-label">Validations totales</div>
+  </div>
+  <div class="mini-stat">
+    <div class="stat-value">{{ avgValidationRate | number:'1.0-0' }}%</div>
+    <div class="stat-label">Taux moyen</div>
+  </div>
+  <div class="mini-stat">
+    <div class="stat-value" style="font-size:1rem;">{{ mostActiveEmployee }}</div>
+    <div class="stat-label">Plus actif</div>
+  </div>
+</div>
+
+<div class="grid cols-2">
+  <!-- Employee Table -->
+  <div class="card">
+    <h3 class="card-title">📊 Détails par employé</h3>
+    <div *ngIf="stats.length === 0" class="empty-state">
+      <div class="empty-icon">👥</div>
+      <p>Aucun employé trouvé</p>
+    </div>
+    <table *ngIf="stats.length > 0" class="table">
+      <thead>
+        <tr>
+          <th>Employé</th>
+          <th>Validées</th>
+          <th>Non pertinentes</th>
+          <th>Projets</th>
+          <th>Taux</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let s of stats">
+          <td>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+              <div class="avatar-small">{{ s.employee.name.charAt(0) }}</div>
+              <span>{{ s.employee.name }}</span>
+            </div>
+          </td>
+          <td><span class="badge etat-validee">{{ s.tasksValidated }}</span></td>
+          <td><span class="badge etat-non_validee">{{ s.tasksMarkedNotPertinent }}</span></td>
+          <td>{{ s.projectsInvolved }}</td>
+          <td>
+            <span [style.color]="s.validationRate >= 70 ? '#16a34a' : s.validationRate >= 40 ? '#f59e0b' : '#ef4444'">
+              {{ s.validationRate | number:'1.0-0' }}%
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Bar Chart -->
+  <div class="card">
+    <h3 class="card-title">📈 Tâches validées par employé</h3>
+    <div *ngIf="stats.length === 0" class="empty-state">
+      <div class="empty-icon">📊</div>
+      <p>Aucune donnée</p>
+    </div>
+    <div *ngIf="stats.length > 0" class="bar-chart">
+      <div *ngFor="let s of stats" class="bar-row">
+        <div class="bar-label">{{ s.employee.name }}</div>
+        <div class="bar-track">
+          <div class="bar-fill purple" [style.width.%]="getBarWidth(s.tasksValidated)"></div>
+        </div>
+        <div class="bar-value">{{ s.tasksValidated }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .avatar-small {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: .75rem;
+    font-weight: 600;
+  }
+</style>
+

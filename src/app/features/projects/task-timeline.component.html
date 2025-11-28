@@ -1,0 +1,69 @@
+<div class="task-timeline">
+  <!-- Empty State -->
+  <div *ngIf="timelineTasks.length === 0" class="empty-state">
+    <div class="empty-icon">📅</div>
+    <p>Aucune tâche à afficher</p>
+  </div>
+
+  <!-- Timeline View -->
+  <div *ngIf="timelineTasks.length > 0" class="timeline-container">
+    <!-- Legend -->
+    <div class="timeline-legend">
+      <div class="legend-item">
+        <span class="legend-dot late"></span>
+        <span>En retard</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot soon"></span>
+        <span>Échéance proche (15j)</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot normal"></span>
+        <span>Normal</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot completed"></span>
+        <span>Terminé</span>
+      </div>
+    </div>
+
+    <!-- Timeline Chart -->
+    <div class="timeline-chart">
+      <!-- Month Labels -->
+      <div class="timeline-axis">
+        <div *ngFor="let m of monthLabels" class="month-marker" [style.left.%]="m.leftPercent">
+          <div class="month-line"></div>
+          <span class="month-label">{{ m.label }}</span>
+        </div>
+      </div>
+
+      <!-- Today Marker -->
+      <div *ngIf="showToday" class="today-marker" [style.left.%]="todayPercent">
+        <div class="today-line"></div>
+        <span class="today-label">Aujourd'hui</span>
+      </div>
+
+      <!-- Task Rows -->
+      <div class="timeline-rows">
+        <div *ngFor="let task of timelineTasks" class="timeline-row">
+          <div class="task-label">
+            <span class="task-name">{{ task.title }}</span>
+            <span class="task-dates">{{ formatDate(task.startDate) }} - {{ formatDate(task.endDate) }}</span>
+          </div>
+          <div class="task-bar-container">
+            <div
+              class="task-bar"
+              [ngClass]="getStatusClass(task.status)"
+              [style.left.%]="task.leftPercent"
+              [style.width.%]="task.widthPercent"
+              [title]="task.title + ' (' + formatDate(task.startDate) + ' - ' + formatDate(task.endDate) + ')'"
+            >
+              <span class="bar-label" *ngIf="task.widthPercent > 10">{{ task.durationDays }}j</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

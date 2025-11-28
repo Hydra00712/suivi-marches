@@ -1,0 +1,72 @@
+<div class="approval-matrix">
+  <!-- Progress Summary -->
+  <div class="progress-summary">
+    <div class="progress-info">
+      <span class="progress-text">
+        <strong>{{ validatedTasksCount }} / {{ totalTasks }}</strong> tâches validées
+        (au moins un employé par tâche)
+      </span>
+      <span class="progress-percent">{{ progressPercent }}%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="progressPercent"></div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="tasks.length === 0" class="empty-state">
+    <div class="empty-icon">📋</div>
+    <p>Aucune tâche dans ce projet</p>
+  </div>
+
+  <!-- Matrix Table -->
+  <div *ngIf="tasks.length > 0" class="matrix-container">
+    <table class="matrix-table">
+      <thead>
+        <tr>
+          <th class="task-header">Tâche</th>
+          <th *ngFor="let emp of employees" class="employee-header">
+            <div class="employee-name">{{ emp.name }}</div>
+          </th>
+          <th class="status-header">Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let task of tasks" [class.validated-row]="isTaskValidated(task)">
+          <td class="task-name">
+            <span class="task-title">{{ task.title }}</span>
+            <span class="task-state badge" [ngClass]="'etat-' + task.state">{{ task.state }}</span>
+          </td>
+          <td *ngFor="let emp of employees" class="matrix-cell">
+            <ng-container *ngIf="getCell(task.id, emp.id) as cell">
+              <span class="status-icon" [ngClass]="getStatusClass(cell.status)">
+                {{ getStatusIcon(cell.status) }}
+              </span>
+            </ng-container>
+          </td>
+          <td class="task-status">
+            <span *ngIf="isTaskValidated(task)" class="validated-badge">✅ Validée</span>
+            <span *ngIf="!isTaskValidated(task)" class="pending-badge">⏳ En attente</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Legend -->
+  <div class="matrix-legend">
+    <div class="legend-item">
+      <span class="status-icon status-validated">✅</span>
+      <span>Validé</span>
+    </div>
+    <div class="legend-item">
+      <span class="status-icon status-not-pertinent">🚫</span>
+      <span>Non pertinent</span>
+    </div>
+    <div class="legend-item">
+      <span class="status-icon status-pending">⏳</span>
+      <span>En attente</span>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,4 @@
+.brand{ color:var(--text); }
+.profile{ display:flex; align-items:center; gap:.6rem; padding-left:.6rem; border-left:1px solid rgba(255,255,255,.08); }
+.profile .menu{ display:flex; flex-direction:column; gap:.6rem; }
+
